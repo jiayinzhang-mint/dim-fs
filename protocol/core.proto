@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package protocol;
+
+service CoreService {
+  rpc UploadFile(stream Chunk) returns (UploadFileResponse) {}
+}
+
+message Chunk { bytes Content = 1; }
+
+enum UploadStatusCode {
+  Unknown = 0;
+  Ok = 1;
+  Failed = 2;
+}
+
+message UploadFileResponse {
+  string Message = 1;
+  UploadStatusCode UploadStatusCode = 2;
+}

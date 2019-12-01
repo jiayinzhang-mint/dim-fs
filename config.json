@@ -1,0 +1,18 @@
+{
+  "core": {
+    "port": 9089
+  },
+  "db": {
+    "host": "",
+    "port": "",
+    "user": "",
+    "password": "",
+    "dbName": "",
+    "sslmode": ""
+  },
+  "redis": {
+    "addr": "localhost:6379",
+    "password": "",
+    "db": 0
+  }
+}
