@@ -9,7 +9,6 @@ import (
 
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 )
 
 // ConnectionInstance conatins grpc connection instance
@@ -21,10 +20,9 @@ type ConnectionInstance struct {
 
 // ConnectionConfig contains basic config
 type ConnectionConfig struct {
-	Address         string
-	ChunkSize       int
-	RootCertificate string
-	Compress        bool
+	Address   string
+	ChunkSize int
+	Compress  bool
 }
 
 // Stat benchmark
@@ -36,8 +34,7 @@ type Stat struct {
 // NewClient create new grpc client
 func NewClient(cfg ConnectionConfig) (c ConnectionInstance, err error) {
 	var (
-		grpcOpts  = []grpc.DialOption{}
-		grpcCreds credentials.TransportCredentials
+		grpcOpts = []grpc.DialOption{}
 	)
 
 	if cfg.Address == "" {
@@ -50,19 +47,7 @@ func NewClient(cfg ConnectionConfig) (c ConnectionInstance, err error) {
 			grpc.WithDefaultCallOptions(grpc.UseCompressor("gzip")))
 	}
 
-	if cfg.RootCertificate != "" {
-		grpcCreds, err = credentials.NewClientTLSFromFile(cfg.RootCertificate, "localhost")
-		if err != nil {
-			err = errors.Wrapf(err,
-				"failed to create grpc tls client via root-cert %s",
-				cfg.RootCertificate)
-			return
-		}
-
-		grpcOpts = append(grpcOpts, grpc.WithTransportCredentials(grpcCreds))
-	} else {
-		grpcOpts = append(grpcOpts, grpc.WithInsecure())
-	}
+	grpcOpts = append(grpcOpts, grpc.WithInsecure())
 
 	switch {
 	case cfg.ChunkSize == 0:
