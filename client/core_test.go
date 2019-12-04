@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"fmt"
 	"testing"
 )
@@ -8,11 +9,13 @@ import (
 func TestUploadFile(t *testing.T) {
 
 	// Create client
-	c, err := NewClient(ConnectionConfig{
+	c, createClientErr := NewClient(ConnectionConfig{
 		Address:   "localhost:9089",
 		ChunkSize: 10,
 		Compress:  false,
 	})
+	fmt.Println(c, createClientErr)
 
-	fmt.Println(c, err)
+	stat, uploadFileErr := c.UploadFile(context.TODO(), "./test.txt")
+	fmt.Println(stat, uploadFileErr)
 }

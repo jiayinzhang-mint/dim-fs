@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"dim-fs/protocol"
+	"fmt"
 	"io"
 	"os"
 	"time"
@@ -76,11 +77,11 @@ func NewClient(cfg ConnectionConfig) (c ConnectionInstance, err error) {
 // UploadFile upload file handler
 func (c *ConnectionInstance) UploadFile(ctx context.Context, f string) (stats Stat, err error) {
 	var (
-		writing = true
-		buf     []byte
-		n       int
-		file    *os.File
-		status  *protocol.UploadFileResponse
+		writing  = true
+		buf      []byte
+		n        int
+		file     *os.File
+		response *protocol.UploadFileResponse
 	)
 
 	file, err = os.Open(f)
@@ -107,6 +108,7 @@ func (c *ConnectionInstance) UploadFile(ctx context.Context, f string) (stats St
 		n, err = file.Read(buf)
 		if err != nil {
 			if err == io.EOF {
+
 				writing = false
 				err = nil
 				continue
@@ -129,17 +131,19 @@ func (c *ConnectionInstance) UploadFile(ctx context.Context, f string) (stats St
 
 	stats.FinishedAt = time.Now()
 
-	status, err = stream.CloseAndRecv()
+	response, err = stream.CloseAndRecv()
+	fmt.Println(buf)
+
 	if err != nil {
 		err = errors.Wrapf(err,
 			"failed to receive upstream status response")
 		return
 	}
 
-	if status.UploadStatusCode != protocol.UploadStatusCode_Ok {
+	if response.UploadStatusCode != protocol.UploadStatusCode_Ok {
 		err = errors.Errorf(
 			"upload failed - msg: %s",
-			status.Message)
+			response.Message)
 		return
 	}
 
