@@ -6,7 +6,10 @@ service CoreService {
   rpc UploadFile(stream Chunk) returns (UploadFileResponse) {}
 }
 
-message Chunk { bytes Content = 1; }
+message Chunk {
+  bytes Content = 1;
+  string fileName = 2;
+}
 
 enum UploadStatusCode {
   Unknown = 0;

@@ -8,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 )
@@ -39,7 +40,7 @@ func NewClient(cfg ConnectionConfig) (c ConnectionInstance, err error) {
 	)
 
 	if cfg.Address == "" {
-		err = errors.Errorf("address must be specified")
+		err = errors.Errorf("Address must be specified")
 		return
 	}
 
@@ -64,7 +65,7 @@ func NewClient(cfg ConnectionConfig) (c ConnectionInstance, err error) {
 	c.conn, err = grpc.Dial(cfg.Address, grpcOpts...)
 	if err != nil {
 		err = errors.Wrapf(err,
-			"failed to start grpc connection with address %s",
+			"Failed to start grpc connection with address %s",
 			cfg.Address)
 		return
 	}
@@ -87,7 +88,7 @@ func (c *ConnectionInstance) UploadFile(ctx context.Context, f string) (stats St
 	file, err = os.Open(f)
 	if err != nil {
 		err = errors.Wrapf(err,
-			"failed to open file %s",
+			"Failed to open file %s",
 			f)
 		return
 	}
@@ -96,7 +97,7 @@ func (c *ConnectionInstance) UploadFile(ctx context.Context, f string) (stats St
 	stream, err := c.client.UploadFile(ctx)
 	if err != nil {
 		err = errors.Wrapf(err,
-			"failed to create upload stream for file %s",
+			"Failed to create upload stream for file %s",
 			f)
 		return
 	}
@@ -115,16 +116,17 @@ func (c *ConnectionInstance) UploadFile(ctx context.Context, f string) (stats St
 			}
 
 			err = errors.Wrapf(err,
-				"errored while copying from file to buf")
+				"Error while copying from file to buf")
 			return
 		}
 
 		err = stream.Send(&protocol.Chunk{
-			Content: buf[:n],
+			Content:  buf[:n],
+			FileName: file.Name() + uuid.New().String(),
 		})
 		if err != nil {
 			err = errors.Wrapf(err,
-				"failed to send chunk via stream")
+				"Failed to send chunk via stream")
 			return
 		}
 	}
@@ -136,13 +138,13 @@ func (c *ConnectionInstance) UploadFile(ctx context.Context, f string) (stats St
 
 	if err != nil {
 		err = errors.Wrapf(err,
-			"failed to receive upstream status response")
+			"Failed to receive upstream status response")
 		return
 	}
 
 	if response.UploadStatusCode != protocol.UploadStatusCode_Ok {
 		err = errors.Errorf(
-			"upload failed - msg: %s",
+			"Upload failed - msg: %s",
 			response.Message)
 		return
 	}

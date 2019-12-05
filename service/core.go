@@ -7,7 +7,9 @@ import (
 	"io"
 	"os"
 
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
+	"github.com/spf13/viper"
 )
 
 // CoreService contains core file system service
@@ -15,12 +17,12 @@ type CoreService struct{}
 
 //writeToFp takes in a file pointer and byte array and writes the byte array into the file
 //returns error if pointer is nil or error in writing to file
-func writeToFp(fp *os.File, data []byte) error {
+func writeToFile(f *os.File, data []byte) error {
 	w := 0
 	n := len(data)
 	for {
 
-		nw, err := fp.Write(data[w:])
+		nw, err := f.Write(data[w:])
 		if err != nil {
 			return err
 		}
@@ -29,19 +31,17 @@ func writeToFp(fp *os.File, data []byte) error {
 			return nil
 		}
 	}
-
 }
 
 // UploadFile handle upload file call
 func (c *CoreService) UploadFile(stream protocol.CoreService_UploadFileServer) (err error) {
 	firstChunk := true
-	var fp *os.File
-
-	var fileData *protocol.Chunk
+	var f *os.File
+	var chunks *protocol.Chunk
 
 	for {
 
-		fileData, err = stream.Recv() //ignoring the data  TO-Do save files received
+		chunks, err = stream.Recv() //ignoring the data  TO-Do save files received
 
 		if err != nil {
 			if err == io.EOF {
@@ -49,13 +49,19 @@ func (c *CoreService) UploadFile(stream protocol.CoreService_UploadFileServer) (
 			}
 
 			err = errors.Wrapf(err,
-				"failed unexpectadely while reading chunks from stream")
+				"Failed unexpectadely while reading chunks from stream")
 			return
 		}
 
-		if firstChunk { //first chunk contains file name
-
-			fp, err = os.Create("output")
+		if firstChunk { // First chunk contains file name
+			// Check file name
+			var fileName string
+			if chunks.FileName != "" {
+				fileName = chunks.FileName
+			} else {
+				fileName = uuid.New().String()
+			}
+			f, err = os.Create(viper.GetString("file.upload") + fileName)
 
 			if err != nil {
 				utils.LogError("Unable to create file")
@@ -65,12 +71,12 @@ func (c *CoreService) UploadFile(stream protocol.CoreService_UploadFileServer) (
 				})
 				return
 			}
-			defer fp.Close()
+			defer f.Close()
 
 			firstChunk = false
 		}
 
-		err = writeToFp(fp, fileData.Content)
+		err = writeToFile(f, chunks.Content)
 		if err != nil {
 			utils.LogError("Unable to write chunk of filename :" + err.Error())
 			stream.SendAndClose(&protocol.UploadFileResponse{
@@ -89,7 +95,7 @@ func (c *CoreService) UploadFile(stream protocol.CoreService_UploadFileServer) (
 
 	if err != nil {
 		err = errors.Wrapf(err,
-			"failed to send status code")
+			"Failed to send status code")
 		return
 	}
 	fmt.Println("Successfully received and stored the file :")
