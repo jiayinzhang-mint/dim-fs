@@ -101,3 +101,7 @@ func (c *CoreService) UploadFile(stream protocol.CoreService_UploadFileServer) (
 	fmt.Println("Successfully received and stored the file :")
 	return
 }
+
+func (c *CoreService) DownloadFile(params *protocol.DownloadFileParams, srv protocol.CoreService_DownloadFileServer) (err error) {
+	return
+}
