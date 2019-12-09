@@ -4,6 +4,7 @@ package protocol;
 
 service CoreService {
   rpc UploadFile(stream Chunk) returns (UploadFileResponse) {}
+  rpc DownloadFile(DownloadFileParams) returns (stream ResChunk) {}
 }
 
 message Chunk {
@@ -21,3 +22,7 @@ message UploadFileResponse {
   string Message = 1;
   UploadStatusCode UploadStatusCode = 2;
 }
+
+message DownloadFileParams { string FileName = 1; }
+
+message ResChunk { bytes Content = 1; }
