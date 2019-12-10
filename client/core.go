@@ -11,7 +11,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
-	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 )
 
@@ -124,7 +123,7 @@ func (c *ConnectionInstance) UploadFile(ctx context.Context, f string) (stats St
 
 		err = stream.Send(&protocol.Chunk{
 			Content:  buf[:n],
-			FileName: file.Name() + uuid.New().String(),
+			FileName: uuid.New().String() + "." + file.Name(),
 		})
 		if err != nil {
 			err = errors.Wrapf(err,
@@ -161,7 +160,6 @@ func (c *ConnectionInstance) DownloadFile(ctx context.Context, fileName string) 
 	stream, err := c.client.DownloadFile(ctx, &protocol.DownloadFileParams{FileName: fileName})
 
 	for {
-
 		// Get chunks from stream
 		chunks, err = stream.Recv()
 
@@ -176,7 +174,7 @@ func (c *ConnectionInstance) DownloadFile(ctx context.Context, fileName string) 
 		}
 
 		// Create file
-		f, err = os.Create(viper.GetString("file.upload") + fileName)
+		f, err = os.Create("" + fileName)
 
 		if err != nil {
 			utils.LogError("Unable to create file")

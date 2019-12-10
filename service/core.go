@@ -93,7 +93,6 @@ func (c *CoreService) DownloadFile(params *protocol.DownloadFileParams, stream p
 		writing = true
 		buf     []byte
 		n       int
-		file    *os.File
 	)
 
 	filePath := viper.GetString("file.upload") + params.FileName
@@ -110,7 +109,8 @@ func (c *CoreService) DownloadFile(params *protocol.DownloadFileParams, stream p
 
 	buf = make([]byte, 512)
 	for writing {
-		n, err = file.Read(buf)
+		n, err = f.Read(buf)
+		fmt.Println(err)
 		if err != nil {
 			if err == io.EOF {
 				writing = false
