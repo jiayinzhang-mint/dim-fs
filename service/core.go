@@ -15,24 +15,6 @@ import (
 // CoreService contains core file system service
 type CoreService struct{}
 
-//writeToFp takes in a file pointer and byte array and writes the byte array into the file
-//returns error if pointer is nil or error in writing to file
-func writeToFile(f *os.File, data []byte) error {
-	w := 0
-	n := len(data)
-	for {
-
-		nw, err := f.Write(data[w:])
-		if err != nil {
-			return err
-		}
-		w += nw
-		if nw >= n {
-			return nil
-		}
-	}
-}
-
 // UploadFile handle upload file call
 func (c *CoreService) UploadFile(stream protocol.CoreService_UploadFileServer) (err error) {
 	firstChunk := true
@@ -41,7 +23,8 @@ func (c *CoreService) UploadFile(stream protocol.CoreService_UploadFileServer) (
 
 	for {
 
-		chunks, err = stream.Recv() //ignoring the data  TO-Do save files received
+		// Get chunks from stream
+		chunks, err = stream.Recv()
 
 		if err != nil {
 			if err == io.EOF {
@@ -61,6 +44,8 @@ func (c *CoreService) UploadFile(stream protocol.CoreService_UploadFileServer) (
 			} else {
 				fileName = uuid.New().String()
 			}
+
+			// Create file
 			f, err = os.Create(viper.GetString("file.upload") + fileName)
 
 			if err != nil {
@@ -76,7 +61,8 @@ func (c *CoreService) UploadFile(stream protocol.CoreService_UploadFileServer) (
 			firstChunk = false
 		}
 
-		err = writeToFile(f, chunks.Content)
+		// Write into file
+		err = utils.WriteToFile(f, chunks.Content)
 		if err != nil {
 			utils.LogError("Unable to write chunk of filename :" + err.Error())
 			stream.SendAndClose(&protocol.UploadFileResponse{
@@ -87,7 +73,6 @@ func (c *CoreService) UploadFile(stream protocol.CoreService_UploadFileServer) (
 		}
 	}
 
-	//s.logger.Info().Msg("upload received")
 	err = stream.SendAndClose(&protocol.UploadFileResponse{
 		Message:          "Upload received with success",
 		UploadStatusCode: protocol.UploadStatusCode_Ok,
@@ -102,6 +87,51 @@ func (c *CoreService) UploadFile(stream protocol.CoreService_UploadFileServer) (
 	return
 }
 
-func (c *CoreService) DownloadFile(params *protocol.DownloadFileParams, srv protocol.CoreService_DownloadFileServer) (err error) {
+// DownloadFile handle file download call
+func (c *CoreService) DownloadFile(params *protocol.DownloadFileParams, stream protocol.CoreService_DownloadFileServer) (err error) {
+	var (
+		writing = true
+		buf     []byte
+		n       int
+		file    *os.File
+	)
+
+	filePath := viper.GetString("file.upload") + params.FileName
+
+	// check if file exists and open
+	f, err := os.Open(filePath)
+	defer f.Close() //Close after function return
+	if err != nil {
+		// File not found, send 404
+		err = errors.Wrapf(err,
+			"File does not exist")
+		return
+	}
+
+	buf = make([]byte, 512)
+	for writing {
+		n, err = file.Read(buf)
+		if err != nil {
+			if err == io.EOF {
+				writing = false
+				err = nil
+				continue
+			}
+
+			err = errors.Wrapf(err,
+				"Error while copying from file to buf")
+			return
+		}
+
+		err = stream.Send(&protocol.ResChunk{
+			Content: buf[:n],
+		})
+		if err != nil {
+			err = errors.Wrapf(err,
+				"Failed to send chunk via stream")
+			return
+		}
+	}
+
 	return
 }

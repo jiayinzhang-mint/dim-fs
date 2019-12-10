@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"dim-fs/protocol"
+	"dim-fs/utils"
 	"fmt"
 	"io"
 	"os"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
+	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 )
 
@@ -146,6 +148,55 @@ func (c *ConnectionInstance) UploadFile(ctx context.Context, f string) (stats St
 		err = errors.Errorf(
 			"Upload failed - msg: %s",
 			response.Message)
+		return
+	}
+
+	return
+}
+
+// DownloadFile download file handler
+func (c *ConnectionInstance) DownloadFile(ctx context.Context, fileName string) (err error) {
+	var f *os.File
+	var chunks *protocol.ResChunk
+	stream, err := c.client.DownloadFile(ctx, &protocol.DownloadFileParams{FileName: fileName})
+
+	for {
+
+		// Get chunks from stream
+		chunks, err = stream.Recv()
+
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+
+			err = errors.Wrapf(err,
+				"Failed unexpectadely while reading chunks from stream")
+			return
+		}
+
+		// Create file
+		f, err = os.Create(viper.GetString("file.upload") + fileName)
+
+		if err != nil {
+			utils.LogError("Unable to create file")
+
+			return
+		}
+		defer f.Close()
+
+		// Write into file
+		err = utils.WriteToFile(f, chunks.Content)
+		if err != nil {
+			utils.LogError("Unable to write chunk of filename :" + err.Error())
+
+			return
+		}
+	}
+
+	if err != nil {
+		err = errors.Wrapf(err,
+			"Failed to send status code")
 		return
 	}
 
