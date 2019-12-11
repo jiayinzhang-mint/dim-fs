@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package protocol;
 
+import "google/protobuf/any.proto";
+
 service CoreService {
   rpc UploadFile(stream Chunk) returns (UploadFileResponse) {}
   rpc DownloadFile(DownloadFileParams) returns (stream ResChunk) {}
@@ -23,6 +25,20 @@ message UploadFileResponse {
   UploadStatusCode UploadStatusCode = 2;
 }
 
-message DownloadFileParams { string FileName = 1; }
+enum FileType {
+  Image = 0;
+  Video = 1;
+  Audio = 2;
+  Archive = 3;
+  Documents = 4;
+  Font = 5;
+  Others = 6;
+}
+
+message DownloadFileParams {
+  string FileName = 1;
+  FileType FileType = 2;
+  google.protobuf.Any Options = 3;
+}
 
 message ResChunk { bytes Content = 1; }
