@@ -93,13 +93,14 @@ func (c *CoreService) DownloadFile(params *protocol.DownloadFileParams, stream p
 		writing = true
 		buf     []byte
 		n       int
+		f       *os.File
 	)
 
 	filePath := viper.GetString("file.upload") + params.FileName
 
-	// check if file exists and open
-	f, err := os.Open(filePath)
-	defer f.Close() //Close after function return
+	// Check if file exists and open
+	f, err = os.Open(filePath)
+	defer f.Close()
 	if err != nil {
 		// File not found, send 404
 		err = errors.Wrapf(err,
@@ -110,7 +111,6 @@ func (c *CoreService) DownloadFile(params *protocol.DownloadFileParams, stream p
 	buf = make([]byte, 512)
 	for writing {
 		n, err = f.Read(buf)
-		fmt.Println(err)
 		if err != nil {
 			if err == io.EOF {
 				writing = false
