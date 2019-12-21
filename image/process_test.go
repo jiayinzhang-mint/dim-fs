@@ -1,4 +1,4 @@
-package tools
+package image
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 
 func TestGetTargetSuffix(*testing.T) {
 	var i DIMImage
-	opts := &ImageProcessOptions{
+	opts := &ProcessOptions{
 		targetHeight:  1,
 		targetWidth:   2,
 		targetQuality: 3,
