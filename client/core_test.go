@@ -16,7 +16,7 @@ func TestUploadFile(t *testing.T) {
 	})
 	fmt.Println(c, createClientErr)
 
-	stat, uploadFileErr := c.UploadFile(context.TODO(), "test.txt")
+	stat, uploadFileErr := c.UploadFile(context.TODO(), "test.txt", "biu")
 	fmt.Println(stat, uploadFileErr)
 }
 
@@ -29,6 +29,6 @@ func TestDownloadFile(t *testing.T) {
 	})
 	fmt.Println(c, createClientErr)
 
-	err := c.DownloadFile(context.TODO(), "c8891a39-314c-4af9-a814-7e461fc61972.test.txt")
+	err := c.DownloadFile(context.TODO(), "63f826b0-9f2b-4cc0-af2c-c73f5cf1a8e9.test.txt")
 	fmt.Println(err)
 }

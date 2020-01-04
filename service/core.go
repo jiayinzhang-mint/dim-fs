@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
@@ -45,6 +46,12 @@ func (c *CoreService) UploadFile(stream protocol.CoreService_UploadFileServer) (
 				fileName = uuid.New().String()
 			}
 
+			// Create path if not exist
+			fileDir := filepath.Dir(fileName)
+			if _, err := os.Stat(viper.GetString("file.upload") + fileDir); os.IsNotExist(err) {
+				os.MkdirAll(viper.GetString("file.upload")+fileDir, 0777)
+			}
+
 			// Create file
 			f, err = os.Create(viper.GetString("file.upload") + fileName)
 
@@ -62,6 +69,7 @@ func (c *CoreService) UploadFile(stream protocol.CoreService_UploadFileServer) (
 		}
 
 		// Write into file
+		fmt.Println("name" + f.Name())
 		err = utils.WriteToFile(f, chunks.Content)
 		if err != nil {
 			utils.LogError("Unable to write chunk of filename :" + err.Error())
@@ -96,10 +104,10 @@ func (c *CoreService) DownloadFile(params *protocol.DownloadFileParams, stream p
 		f       *os.File
 	)
 
-	filePath := viper.GetString("file.upload") + params.FileName
+	fileFullPath := viper.GetString("file.upload") + params.FileName
 
 	// Check if file exists and open
-	f, err = os.Open(filePath)
+	f, err = os.Open(fileFullPath)
 	defer f.Close()
 	if err != nil {
 		// File not found, send 404

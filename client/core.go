@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"time"
 
 	"github.com/google/uuid"
@@ -32,6 +33,8 @@ type ConnectionConfig struct {
 type Stat struct {
 	StartedAt  time.Time
 	FinishedAt time.Time
+	Size       int
+	Name       string
 }
 
 // NewClient create new grpc client
@@ -77,7 +80,7 @@ func NewClient(cfg ConnectionConfig) (c ConnectionInstance, err error) {
 }
 
 // UploadFile upload file handler
-func (c *ConnectionInstance) UploadFile(ctx context.Context, f string) (stats Stat, err error) {
+func (c *ConnectionInstance) UploadFile(ctx context.Context, sourceFilePath string, targetPath string) (stats Stat, err error) {
 	var (
 		writing  = true
 		buf      []byte
@@ -86,11 +89,11 @@ func (c *ConnectionInstance) UploadFile(ctx context.Context, f string) (stats St
 		response *protocol.UploadFileResponse
 	)
 
-	file, err = os.Open(f)
+	file, err = os.Open(sourceFilePath)
 	if err != nil {
 		err = errors.Wrapf(err,
 			"Failed to open file %s",
-			f)
+			sourceFilePath)
 		return
 	}
 	defer file.Close()
@@ -99,7 +102,7 @@ func (c *ConnectionInstance) UploadFile(ctx context.Context, f string) (stats St
 	if err != nil {
 		err = errors.Wrapf(err,
 			"Failed to create upload stream for file %s",
-			f)
+			sourceFilePath)
 		return
 	}
 	defer stream.CloseSend()
@@ -121,9 +124,13 @@ func (c *ConnectionInstance) UploadFile(ctx context.Context, f string) (stats St
 			return
 		}
 
+		newFileName := targetPath + "/" + uuid.New().String() + "." + file.Name()
+		fmt.Println(newFileName)
+		stats.Name = newFileName
+
 		err = stream.Send(&protocol.Chunk{
 			Content:  buf[:n],
-			FileName: uuid.New().String() + "." + file.Name(),
+			FileName: newFileName,
 		})
 		if err != nil {
 			err = errors.Wrapf(err,
@@ -174,7 +181,7 @@ func (c *ConnectionInstance) DownloadFile(ctx context.Context, fileName string) 
 		}
 
 		// Create file
-		f, err = os.Create("" + fileName)
+		f, err = os.Create("" + path.Base(fileName))
 
 		if err != nil {
 			utils.LogError("Unable to create file")
