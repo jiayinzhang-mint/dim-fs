@@ -2,11 +2,16 @@
 
 GRPC based static file service
 
-## Core Service
+## GRPC Service
 
-------
+---
 
 ### UploadFile
 
 ### DownloadFile
 
+## REST Service
+
+---
+
+### ViewImage

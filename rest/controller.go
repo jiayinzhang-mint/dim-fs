@@ -18,7 +18,7 @@ func viewImage(w http.ResponseWriter, r *http.Request) {
 
 	// File not exist
 	if os.IsNotExist(e) {
-		log.Println(path, " is not exists.")
+		log.Println(path, " does not exists.")
 		w.WriteHeader(404)
 		return
 	}
