@@ -1,14 +1,16 @@
 package client
 
 import (
+	"bytes"
 	"context"
 	"fmt"
-	"github.com/insdim/dim-fs/protocol"
-	"github.com/insdim/dim-fs/utils"
 	"io"
 	"os"
 	"path"
 	"time"
+
+	"github.com/insdim/dim-fs/protocol"
+	"github.com/insdim/dim-fs/utils"
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
@@ -209,7 +211,7 @@ func (c *ConnectionInstance) DownloadFile(ctx context.Context, fileName string) 
 }
 
 // ViewFile view file handler
-func (c *ConnectionInstance) ViewFile(ctx context.Context, fileName string) (data io.Writer, err error) {
+func (c *ConnectionInstance) ViewFile(ctx context.Context, fileName string) (data []byte, err error) {
 	var chunks *protocol.ResChunk
 	stream, err := c.client.DownloadFile(ctx, &protocol.DownloadFileParams{FileName: fileName})
 
@@ -228,7 +230,8 @@ func (c *ConnectionInstance) ViewFile(ctx context.Context, fileName string) (dat
 		}
 
 		// Write into file
-		_, err = data.Write(chunks.Content)
+		var buffer bytes.Buffer
+		_, err = buffer.Write(chunks.Content)
 
 		if err != nil {
 			utils.LogError("Unable to write chunk of filename :" + err.Error())
