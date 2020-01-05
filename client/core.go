@@ -2,9 +2,9 @@ package client
 
 import (
 	"context"
-	"dim-fs/protocol"
-	"dim-fs/utils"
 	"fmt"
+	"github.com/insdim/dim-fs/protocol"
+	"github.com/insdim/dim-fs/utils"
 	"io"
 	"os"
 	"path"
@@ -192,6 +192,44 @@ func (c *ConnectionInstance) DownloadFile(ctx context.Context, fileName string) 
 
 		// Write into file
 		err = utils.WriteToFile(f, chunks.Content)
+		if err != nil {
+			utils.LogError("Unable to write chunk of filename :" + err.Error())
+
+			return
+		}
+	}
+
+	if err != nil {
+		err = errors.Wrapf(err,
+			"Failed to send status code")
+		return
+	}
+
+	return
+}
+
+// ViewFile view file handler
+func (c *ConnectionInstance) ViewFile(ctx context.Context, fileName string) (data io.Writer, err error) {
+	var chunks *protocol.ResChunk
+	stream, err := c.client.DownloadFile(ctx, &protocol.DownloadFileParams{FileName: fileName})
+
+	for {
+		// Get chunks from stream
+		chunks, err = stream.Recv()
+
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+
+			err = errors.Wrapf(err,
+				"Failed unexpectadely while reading chunks from stream")
+			return
+		}
+
+		// Write into file
+		_, err = data.Write(chunks.Content)
+
 		if err != nil {
 			utils.LogError("Unable to write chunk of filename :" + err.Error())
 

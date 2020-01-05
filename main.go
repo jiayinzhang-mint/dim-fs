@@ -1,9 +1,9 @@
 package main
 
 import (
-	"dim-fs/protocol"
-	"dim-fs/rpc"
-	"dim-fs/utils"
+	"github.com/insdim/dim-fs/protocol"
+	"github.com/insdim/dim-fs/rpc"
+	"github.com/insdim/dim-fs/utils"
 	"fmt"
 	"log"
 	"net"

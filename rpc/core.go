@@ -1,9 +1,9 @@
 package rpc
 
 import (
-	"dim-fs/protocol"
-	"dim-fs/utils"
 	"fmt"
+	"github.com/insdim/dim-fs/protocol"
+	"github.com/insdim/dim-fs/utils"
 	"io"
 	"os"
 	"path/filepath"
