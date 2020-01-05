@@ -2,7 +2,7 @@ package main
 
 import (
 	"dim-fs/protocol"
-	"dim-fs/service"
+	"dim-fs/rpc"
 	"dim-fs/utils"
 	"fmt"
 	"log"
@@ -17,19 +17,18 @@ import (
 // BuildEnv build mode (dev or prod)
 var BuildEnv string
 
-// StartServer start grpc server
-func StartServer() {
-	lis, err := net.Listen("tcp", ":"+viper.GetString("core.port"))
+func startRPCServer() {
+	lis, err := net.Listen("tcp", ":"+viper.GetString("rpc.port"))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
 	s := grpc.NewServer()
 
 	// register services
-	protocol.RegisterCoreServiceServer(s, &service.CoreService{})
+	protocol.RegisterCoreServiceServer(s, &rpc.CoreService{})
 	reflection.Register(s)
 
-	fmt.Println("DIMFs service listening at " + viper.GetString("core.port"))
+	fmt.Println("DIMFs grpc service listening at " + viper.GetString("rpc.port"))
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
@@ -51,8 +50,18 @@ func prepareConfig() {
 	}
 }
 
+// func startRestServer() {
+// 	fmt.Println("shit")
+// 	r := mux.NewRouter().StrictSlash(true)
+// 	rest.InitImageAPI(r)
+
+// 	log.Fatal(http.ListenAndServe(":"+viper.GetString("rest.port"), r))
+// 	utils.LogInfo("server listening at " + viper.GetString("rest.port"))
+// }
+
 func main() {
 	utils.LogInfo("Build Env: " + BuildEnv)
 	prepareConfig()
-	StartServer()
+
+	startRPCServer()
 }

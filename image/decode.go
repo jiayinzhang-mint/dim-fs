@@ -4,6 +4,7 @@ import (
 	"image"
 	"image/jpeg"
 	"io"
+	"path/filepath"
 )
 
 //
@@ -20,4 +21,23 @@ func DecodeToJpeg(r io.Reader) (DIMImage, error) {
 func DecodeInfo(r io.Reader) (image.Config, error) {
 	cfg, _, err := image.DecodeConfig(r)
 	return cfg, err
+}
+
+// Type get image type from path
+func Type(p string) string {
+	extname := filepath.Ext(p)
+	switch extname {
+	case ".jpg", ".jpeg", ".jpe", ".jfif":
+		return "image/jpeg"
+	case ".png":
+		return "image/png"
+	case ".ico":
+		return "image/x-icon"
+	case ".gif":
+		return "image/gif"
+	case ".tif", ".tiff":
+		return "image/jiff"
+	default:
+		return "text/plain"
+	}
 }
