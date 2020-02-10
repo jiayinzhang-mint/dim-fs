@@ -2,11 +2,13 @@ package rpc
 
 import (
 	"fmt"
-	"github.com/insdim/dim-fs/protocol"
-	"github.com/insdim/dim-fs/utils"
 	"io"
 	"os"
 	"path/filepath"
+
+	"github.com/insdim/dim-fs/protocol"
+	"github.com/insdim/dim-fs/utils"
+	"github.com/sirupsen/logrus"
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
@@ -56,7 +58,7 @@ func (c *CoreService) UploadFile(stream protocol.CoreService_UploadFileServer) (
 			f, err = os.Create(viper.GetString("file.upload") + fileName)
 
 			if err != nil {
-				utils.LogError("Unable to create file")
+				logrus.Error("Unable to create file")
 				stream.SendAndClose(&protocol.UploadFileResponse{
 					Message:          "Unable to create file ",
 					UploadStatusCode: protocol.UploadStatusCode_Failed,
@@ -72,7 +74,7 @@ func (c *CoreService) UploadFile(stream protocol.CoreService_UploadFileServer) (
 		fmt.Println("name" + f.Name())
 		err = utils.WriteToFile(f, chunks.Content)
 		if err != nil {
-			utils.LogError("Unable to write chunk of filename :" + err.Error())
+			logrus.Error("Unable to write chunk of filename :" + err.Error())
 			stream.SendAndClose(&protocol.UploadFileResponse{
 				Message:          "Unable to write chunk of filename :",
 				UploadStatusCode: protocol.UploadStatusCode_Failed,

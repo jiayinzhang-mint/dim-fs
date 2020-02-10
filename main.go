@@ -11,7 +11,7 @@ import (
 	"github.com/insdim/dim-fs/protocol"
 	"github.com/insdim/dim-fs/rest"
 	"github.com/insdim/dim-fs/rpc"
-	"github.com/insdim/dim-fs/utils"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/spf13/viper"
@@ -28,12 +28,12 @@ var (
 
 func startRPCServer() error {
 	if viper.GetString("rpc.port") == "" {
-		panic(fmt.Errorf("GRPC service port undefined"))
+		panic(fmt.Errorf("dim-fs GRPC service port undefined"))
 	}
 
 	lis, err := net.Listen("tcp", ":"+viper.GetString("rpc.port"))
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		logrus.Fatalf("dim-fs GRPC service failed to listen: %v", err)
 	}
 	s := grpc.NewServer()
 
@@ -41,9 +41,9 @@ func startRPCServer() error {
 	protocol.RegisterCoreServiceServer(s, &rpc.CoreService{})
 	reflection.Register(s)
 
-	utils.LogInfo("DIMFs GRPC service listening at " + viper.GetString("rpc.port"))
+	logrus.Info("dim-fs GRPC service listening at " + viper.GetString("rpc.port"))
 	if err := s.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
+		logrus.Fatalf("dim-fs GRPC service failed to serve: %v", err)
 	}
 
 	return err
@@ -60,19 +60,19 @@ func prepareConfig() {
 	viper.SetConfigType("json")
 	err := viper.ReadInConfig()
 	if err != nil {
-		utils.LogError("config file error")
+		logrus.Fatalf("config file error")
 		os.Exit(1)
 	}
 }
 
 func startRestServer() error {
 	if viper.GetString("rest.port") == "" {
-		panic(fmt.Errorf("REST service port undefined"))
+		panic(fmt.Errorf("dim-fs REST service port undefined"))
 	}
 
 	r := mux.NewRouter().StrictSlash(true)
 	rest.InitImageAPI(r)
-	utils.LogInfo("DIMFs REST service listening at " + viper.GetString("rest.port"))
+	logrus.Info("dim-fs REST service listening at " + viper.GetString("rest.port"))
 
 	err := http.ListenAndServe(":"+viper.GetString("rest.port"), r)
 
@@ -80,7 +80,7 @@ func startRestServer() error {
 }
 
 func main() {
-	utils.LogInfo("Build Env: " + BuildEnv)
+	logrus.Info("Build Env: " + BuildEnv)
 	prepareConfig()
 
 	g.Go(func() error {

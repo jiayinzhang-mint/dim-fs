@@ -11,6 +11,7 @@ import (
 
 	"github.com/insdim/dim-fs/protocol"
 	"github.com/insdim/dim-fs/utils"
+	"github.com/sirupsen/logrus"
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
@@ -186,7 +187,7 @@ func (c *ConnectionInstance) DownloadFile(ctx context.Context, fileName string) 
 		f, err = os.Create("" + path.Base(fileName))
 
 		if err != nil {
-			utils.LogError("Unable to create file")
+			logrus.Error("Unable to create file")
 
 			return
 		}
@@ -195,7 +196,7 @@ func (c *ConnectionInstance) DownloadFile(ctx context.Context, fileName string) 
 		// Write into file
 		err = utils.WriteToFile(f, chunks.Content)
 		if err != nil {
-			utils.LogError("Unable to write chunk of filename :" + err.Error())
+			logrus.Error("Unable to write chunk of filename :" + err.Error())
 
 			return
 		}
@@ -234,7 +235,7 @@ func (c *ConnectionInstance) ViewFile(ctx context.Context, fileName string) (dat
 		_, err = buffer.Write(chunks.Content)
 
 		if err != nil {
-			utils.LogError("Unable to write chunk of filename :" + err.Error())
+			logrus.Error("Unable to write chunk of filename :" + err.Error())
 
 			return
 		}
