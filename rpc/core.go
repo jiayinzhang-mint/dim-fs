@@ -106,7 +106,7 @@ func (c *CoreService) DownloadFile(params *protocol.DownloadFileParams, stream p
 		f       *os.File
 	)
 
-	fileFullPath := viper.GetString("file.upload") + params.FileName
+	fileFullPath := viper.GetString("file.upload") + params.SourcePath
 
 	// Check if file exists and open
 	f, err = os.Open(fileFullPath)

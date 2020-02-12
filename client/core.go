@@ -164,10 +164,10 @@ func (c *ConnectionInstance) UploadFile(ctx context.Context, sourceFilePath stri
 }
 
 // DownloadFile download file handler
-func (c *ConnectionInstance) DownloadFile(ctx context.Context, fileName string) (err error) {
+func (c *ConnectionInstance) DownloadFile(ctx context.Context, fileName string, targetPath string) (err error) {
 	var f *os.File
 	var chunks *protocol.ResChunk
-	stream, err := c.client.DownloadFile(ctx, &protocol.DownloadFileParams{FileName: fileName})
+	stream, err := c.client.DownloadFile(ctx, &protocol.DownloadFileParams{SourcePath: fileName})
 
 	for {
 		// Get chunks from stream
@@ -184,7 +184,7 @@ func (c *ConnectionInstance) DownloadFile(ctx context.Context, fileName string) 
 		}
 
 		// Create file
-		f, err = os.Create("" + path.Base(fileName))
+		f, err = os.Create(targetPath + path.Base(fileName))
 
 		if err != nil {
 			logrus.Error("Unable to create file")
@@ -214,34 +214,36 @@ func (c *ConnectionInstance) DownloadFile(ctx context.Context, fileName string) 
 // ViewFile view file handler
 func (c *ConnectionInstance) ViewFile(ctx context.Context, fileName string) (data []byte, err error) {
 	var chunks *protocol.ResChunk
-	stream, err := c.client.DownloadFile(ctx, &protocol.DownloadFileParams{FileName: fileName})
+	stream, downloadErr := c.client.DownloadFile(ctx, &protocol.DownloadFileParams{SourcePath: fileName})
 
 	for {
 		// Get chunks from stream
-		chunks, err = stream.Recv()
+		var recvErr error
+		chunks, recvErr = stream.Recv()
 
-		if err != nil {
-			if err == io.EOF {
+		if recvErr != nil {
+			if recvErr == io.EOF {
 				break
 			}
 
-			err = errors.Wrapf(err,
+			err = errors.Wrapf(recvErr,
 				"Failed unexpectadely while reading chunks from stream")
 			return
 		}
 
 		// Write into file
 		var buffer bytes.Buffer
-		_, err = buffer.Write(chunks.Content)
+		var writeErr error
+		_, writeErr = buffer.Write(chunks.Content)
 
-		if err != nil {
-			logrus.Error("Unable to write chunk of filename :" + err.Error())
-
+		if writeErr != nil {
+			err = writeErr
+			logrus.Error("Unable to write chunk of filename :" + writeErr.Error())
 			return
 		}
 	}
 
-	if err != nil {
+	if downloadErr != nil {
 		err = errors.Wrapf(err,
 			"Failed to send status code")
 		return

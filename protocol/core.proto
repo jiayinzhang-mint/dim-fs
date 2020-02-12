@@ -10,7 +10,7 @@ service CoreService {
 }
 
 message Chunk {
-  bytes Content = 1;
+  bytes content = 1;
   string fileName = 2;
 }
 
@@ -21,8 +21,8 @@ enum UploadStatusCode {
 }
 
 message UploadFileResponse {
-  string Message = 1;
-  UploadStatusCode UploadStatusCode = 2;
+  string message = 1;
+  UploadStatusCode uploadStatusCode = 2;
 }
 
 enum FileType {
@@ -36,9 +36,9 @@ enum FileType {
 }
 
 message DownloadFileParams {
-  string FileName = 1;
-  FileType FileType = 2;
-  google.protobuf.Any Options = 3;
+  string sourcePath = 1;
+  FileType fileType = 2;
+  google.protobuf.Any options = 3;
 }
 
-message ResChunk { bytes Content = 1; }
+message ResChunk { bytes content = 1; }

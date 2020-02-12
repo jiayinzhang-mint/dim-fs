@@ -29,6 +29,6 @@ func TestDownloadFile(t *testing.T) {
 	})
 	fmt.Println(c, createClientErr)
 
-	err := c.DownloadFile(context.TODO(), "63f826b0-9f2b-4cc0-af2c-c73f5cf1a8e9.test.txt")
+	err := c.DownloadFile(context.TODO(), "63f826b0-9f2b-4cc0-af2c-c73f5cf1a8e9.test.txt", "")
 	fmt.Println(err)
 }
