@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path"
+	"path/filepath"
 	"time"
 
 	"github.com/insdim/dim-fs/protocol"
@@ -127,8 +128,8 @@ func (c *ConnectionInstance) UploadFile(ctx context.Context, sourceFilePath stri
 			return
 		}
 
-		newFileName := targetPath + "/" + uuid.New().String() + "." + file.Name()
-		fmt.Println(newFileName)
+		newFileName := filepath.Join(targetPath, uuid.New().String()+"."+file.Name())
+		logrus.Info("New file path", newFileName)
 		stats.Name = newFileName
 
 		err = stream.Send(&protocol.Chunk{
@@ -164,10 +165,10 @@ func (c *ConnectionInstance) UploadFile(ctx context.Context, sourceFilePath stri
 }
 
 // DownloadFile download file handler
-func (c *ConnectionInstance) DownloadFile(ctx context.Context, fileName string, targetPath string) (err error) {
+func (c *ConnectionInstance) DownloadFile(ctx context.Context, SourcePath string, targetPath string) (err error) {
 	var f *os.File
 	var chunks *protocol.ResChunk
-	stream, err := c.client.DownloadFile(ctx, &protocol.DownloadFileParams{SourcePath: fileName})
+	stream, err := c.client.DownloadFile(ctx, &protocol.DownloadFileParams{SourcePath: SourcePath})
 
 	for {
 		// Get chunks from stream
@@ -184,7 +185,7 @@ func (c *ConnectionInstance) DownloadFile(ctx context.Context, fileName string, 
 		}
 
 		// Create file
-		f, err = os.Create(targetPath + path.Base(fileName))
+		f, err = os.Create(filepath.Join(targetPath, path.Base(SourcePath)))
 
 		if err != nil {
 			logrus.Error("Unable to create file")
