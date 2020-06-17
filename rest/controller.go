@@ -42,6 +42,40 @@ func viewImage(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, fullPath)
 }
 
+// download image file
+func downloadFile(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	path := params["path"]
+
+	fullPath := viper.GetString("file.upload") + path
+	fileinfo, e := os.Stat(fullPath)
+
+	// File not exist
+	if os.IsNotExist(e) {
+		logrus.Error(path, " does not exists.")
+		w.WriteHeader(404)
+		return
+	}
+
+	// Path is a dir
+	if fileinfo.IsDir() {
+		w.WriteHeader(400)
+		return
+	}
+
+	// Check if file exists and open
+	Openfile, err := os.Open(fullPath)
+	defer Openfile.Close() // Close after function return
+	if err != nil {
+		// File not found, send 404
+		http.Error(w, "File not found.", 404)
+	}
+
+	w.Header().Set("Content-Disposition", "attachment; filename=wp.exe")
+	w.Header().Set("Content-Type", "application/octet-stream")
+	http.ServeFile(w, r, fullPath)
+}
+
 // Upload image file
 func uploadImage(w http.ResponseWriter, r *http.Request) {
 

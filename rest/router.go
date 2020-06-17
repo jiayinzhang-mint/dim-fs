@@ -6,5 +6,6 @@ import "github.com/gorilla/mux"
 func InitImageAPI(r *mux.Router) {
 	publicRouter := r.PathPrefix("/image").Subrouter()
 	publicRouter.HandleFunc("", viewImage).Queries("path", "{path}").Methods("GET")
+	publicRouter.HandleFunc("/download/{path}", viewImage).Methods("GET")
 	publicRouter.HandleFunc("", uploadImage).Methods("POST")
 }
